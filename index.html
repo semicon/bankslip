@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UPLOAD SLIP PAYMENT PAPER WORK </title>
+  <script src="https://unpkg.com/jsqr/dist/jsQR.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Montserrat', sans-serif;
+      background: linear-gradient(135deg, #000000, #8B0000);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .container {
+      background: rgba(0, 0, 0, 0.8);
+      border-radius: 20px;
+      padding: 40px 30px;
+      width: 400px;
+      text-align: center;
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
+      border: 2px solid rgba(255, 69, 0, 0.8);
+    }
+
+    h1 {
+      font-size: 21px;
+      color: #fff;
+      margin-bottom: 20px;
+    }
+
+    .upload-text {
+      font-size: 15px;
+      font-weight: 600;
+      color: #ff4444;
+      cursor: pointer;
+    }
+
+    #file-input {
+      display: none;
+    }
+
+    .preview-container {
+      position: relative;
+      margin-top: 30px;
+      display: none;
+    }
+
+    .preview {
+      max-width: 100%;
+      border-radius: 10px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+      display: block;
+    }
+
+    .loading-container {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      display: none;
+    }
+
+    .loading-text {
+      font-size: 14px;
+      font-weight: 600;
+      color: grey;
+      animation: fadeText 1.5s infinite alternate;
+    }
+
+    @keyframes fadeText {
+      0% { opacity: 0.3; }
+      100% { opacity: 1; }
+    }
+
+    .dots {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 5px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      animation: bounce 1.5s infinite ease-in-out;
+    }
+
+    .dot:nth-child(1) { background: black; animation-delay: 0s; }
+    .dot:nth-child(2) { background: red; animation-delay: 0.2s; }
+    .dot:nth-child(3) { background: orange; animation-delay: 0.4s; }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* ปรับแต่ง SweetAlert2 */
+    .swal2-popup {
+      background: #1c1c1c !important;
+      color: white !important;
+      border-radius: 12px !important;
+      padding: 20px 30px !important;
+      width: 350px !important;
+      max-width: 90% !important;
+    }
+
+    .swal2-title {
+      font-size: 20px !important;
+      font-weight: bold !important;
+      color: #ff4444 !important;
+    }
+
+    .swal2-content {
+      font-size: 16px !important;
+      color: white !important;
+    }
+
+    .swal2-icon {
+      border: 2px solid #ff4444 !important;
+      border-radius: 50% !important; /* เพิ่มให้มีรูปวงกลม */
+      background-color: #1c1c1c !important;
+      animation: iconPop 0.5s ease-out;
+    }
+
+    .swal2-icon.swal2-success {
+      border-color: #4CAF50 !important; /* สีเขียว */
+    }
+
+    .swal2-icon.swal2-error {
+      border-color: #ff4444 !important; /* สีแดง */
+    }
+
+    @keyframes iconPop {
+      0% {
+        transform: scale(0.5);
+        opacity: 0;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .swal2-confirm {
+      background: #ff4444 !important;
+      border: none !important;
+      border-radius: 8px !important;
+      padding: 10px 20px !important;
+      font-size: 16px !important;
+      font-weight: bold !important;
+    }
+
+    .swal2-confirm:focus {
+      box-shadow: none !important;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>แจ้งสลีปการชำระเงินของธนาคาร</h1>
+    <label for="file-input" class="upload-text">คลิ๊กเพื่อเลือกสลีป</label>
+    <input type="file" id="file-input" accept="image/*">
+    
+    <div class="preview-container">
+      <img id="preview" class="preview" src="" alt="ตัวอย่างภาพ">
+      
+      <div class="loading-container" id="loading-container">
+        <div class="loading-text" id="loading-text">กำลังตรวจสอบคิวอาร์โค้ด...</div>
+        <div class="dots">
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('file-input');
+    const preview = document.getElementById('preview');
+    const previewContainer = document.querySelector('.preview-container');
+    const loadingContainer = document.getElementById('loading-container');
+    const loadingText = document.getElementById('loading-text');
+
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        previewContainer.style.display = 'block';
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          preview.src = event.target.result;
+          loadingContainer.style.display = 'block';
+
+          setTimeout(() => {
+            checkQRCode(event.target.result);
+          }, 3000);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    function checkQRCode(imageData) {
+      let img = new Image();
+      img.src = imageData;
+      img.onload = () => {
+        let canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        let ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        let imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        let qrCode = jsQR(imgData.data, canvas.width, canvas.height);
+
+        if (qrCode) {
+          Swal.fire({
+            title: '✅ สำเร็จ',
+            text: 'สลีปมี QR Code!',
+            icon: 'success',
+            confirmButtonText: 'ตกลง',
+          }).then(() => {
+            checkName(canvas);
+          });
+        } else {
+          Swal.fire({
+            title: '❌ ไม่สำเร็จ',
+            text: 'สลิปไม่มี QR Code!',
+            icon: 'error',
+            confirmButtonText: 'ลองใหม่',
+          }).then(() => location.reload());
+        }
+      };
+    }
+
+    function checkName(canvas) {
+      loadingContainer.style.display = 'block';
+      loadingText.innerHTML = 'กำลังตรวจสอบชื่อปลายทาง...';
+
+      Tesseract.recognize(canvas, 'tha+eng', {
+        langPath: 'https://tessdata.projectnaptha.com/4.0.0_best/',
+        logger: (m) => console.log(m)
+      }).then(({ data: { text } }) => {
+        let cleanedText = text.replace(/\s/g, '');
+
+        if (cleanedText.includes("น.ส.มนธิราสังวาลวงษ์")) { // ชื่อบัญชีของคุณ
+          Swal.fire({
+            title: '✅ สำเร็จ',
+            text: 'ข้อมูลตรงกับในระบบ',
+            icon: 'success',
+            confirmButtonText: 'ตกลง',
+          }).then(() => {
+            Swal.fire({
+              title: 'กำลังกลับสู่แชทไลน์...',
+              text: 'กรุณารอสักครู่',
+              icon: 'info',
+              allowOutsideClick: false,
+              didOpen: () => {
+                Swal.showLoading(); // แสดง sweetAlert loading
+              }
+            }).then(() => {
+              window.location.href = 'https://line.me/R/ti/p/@semisailom'; // เปลี่ยนเป็นลิงก์ไลน์ของคุณ
+            });
+          });
+        } else {
+          Swal.fire({
+            title: '❌ ไม่สำเร็จ',
+            text: 'ข้อมูลไม่ตรงกับระบบ',
+            icon: 'error',
+            confirmButtonText: 'ลองใหม่',
+          }).then(() => location.reload());
+        }
+      });
+    }
+
+    // ป้องกันการคัดลอก, แคปหน้าจอ และคลิกขวา
+    document.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      Swal.fire({
+        title: '❌ ERROR!',
+        text: 'ไม่อนุญาตให้บันทึกภาพ หรือคัดลอก',
+        icon: 'error',
+        allowOutsideClick: false, // ป้องกันการคลิกข้างนอก
+        didOpen: () => {
+          Swal.showLoading(); // แสดง sweetAlert loading
+        }
+      }).then(() => {
+        window.location.href = 'https://line.me/R/ti/p/@semisailom'; // เปลี่ยนเป็นลิงก์ไลน์ของคุณ
+      });
+    });
+
+    document.addEventListener('copy', (e) => {
+      e.preventDefault();
+      Swal.fire({
+        title: '❌ ERROR!',
+        text: 'ไม่อนุญาตให้บันทึกภาพ หรือคัดลอก',
+        icon: 'error',
+        allowOutsideClick: false, // ป้องกันการคลิกข้างนอก
+        didOpen: () => {
+          Swal.showLoading(); // แสดง sweetAlert loading
+        }
+      }).then(() => {
+        window.location.href = 'https://line.me/R/ti/p/@semisailom'; // เปลี่ยนเป็นลิงก์ไลน์ของคุณ
+      });
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'PrintScreen' || (e.ctrlKey && e.key === 'c')) {
+        e.preventDefault();
+        Swal.fire({
+          title: '❌ ERROR!',
+          text: 'ไม่อนุญาตให้บันทึกภาพ หรือคัดลอก',
+          icon: 'error',
+          allowOutsideClick: false, // ป้องกันการคลิกข้างนอก
+          didOpen: () => {
+            Swal.showLoading(); // แสดง sweetAlert loading
+          }
+        }).then(() => {
+          window.location.href = 'https://line.me/R/ti/p/@semisailom'; // เปลี่ยนเป็นลิงก์ไลน์ของคุณ
+        });
+      }
+    });
+  </script>
+</body>
+  </html>
+  
