@@ -169,8 +169,8 @@
 <body>
 
   <div class="container">
-    <h1>แจ้งสลีปการชำระเงินของธนาคาร</h1>
-    <label for="file-input" class="upload-text">คลิ๊กเพื่อเลือกสลีป</label>
+    <h1>แจ้งสลิปการชำระเงินของธนาคาร</h1>
+    <label for="file-input" class="upload-text">คลิ๊กเพื่อเลือกสลิป</label>
     <input type="file" id="file-input" accept="image/*">
     
     <div class="preview-container">
@@ -184,6 +184,12 @@
           <div class="dot"></div>
         </div>
       </div>
+    </div>
+    <div>
+        Copyleft 
+        <img src="https://mirrors.creativecommons.org/presskit/icons/heart.red.png" width="25" height="25" alt="cc">
+        2022 -
+        <script>document.write(new Date().getFullYear())</script>2025, by Dr.Wichian Ph.
     </div>
   </div>
 
@@ -226,7 +232,7 @@
         if (qrCode) {
           Swal.fire({
             title: '✅ สำเร็จ',
-            text: 'สลีปมี QR Code!',
+            text: 'สลิปมี QR Code!',
             icon: 'success',
             confirmButtonText: 'ตกลง',
           }).then(() => {
@@ -253,7 +259,7 @@
       }).then(({ data: { text } }) => {
         let cleanedText = text.replace(/\s/g, '');
 
-        if (cleanedText.includes("น.ส.มนธิราสังวาลวงษ์")) { // ชื่อบัญชีของคุณ
+        if (cleanedText.includes("นายวิเชียรพุ่มพวง")) { // ชื่อบัญชีของคุณ
           Swal.fire({
             title: '✅ สำเร็จ',
             text: 'ข้อมูลตรงกับในระบบ',
@@ -269,7 +275,7 @@
                 Swal.showLoading(); // แสดง sweetAlert loading
               }
             }).then(() => {
-              window.location.href = 'https://line.me/R/ti/p/@semisailom'; // เปลี่ยนเป็นลิงก์ไลน์ของคุณ
+              window.location.href = 'https://guruchian.blogspot.com/'; // เปลี่ยนเป็นลิงก์ของคุณ
             });
           });
         } else {
@@ -295,7 +301,7 @@
           Swal.showLoading(); // แสดง sweetAlert loading
         }
       }).then(() => {
-        window.location.href = 'https://line.me/R/ti/p/@semisailom'; // เปลี่ยนเป็นลิงก์ไลน์ของคุณ
+        window.location.href = 'https://guruchian.blogspot.com/'; // เปลี่ยนเป็นลิงก์ของคุณ
       });
     });
 
@@ -310,7 +316,7 @@
           Swal.showLoading(); // แสดง sweetAlert loading
         }
       }).then(() => {
-        window.location.href = 'https://line.me/R/ti/p/@semisailom'; // เปลี่ยนเป็นลิงก์ไลน์ของคุณ
+        window.location.href = 'https://guruchian.blogspot.com/'; // เปลี่ยนเป็นลิงก์ของคุณ
       });
     });
 
@@ -326,7 +332,7 @@
             Swal.showLoading(); // แสดง sweetAlert loading
           }
         }).then(() => {
-          window.location.href = 'https://line.me/R/ti/p/@semisailom'; // เปลี่ยนเป็นลิงก์ไลน์ของคุณ
+          window.location.href = 'https://guruchian.blogspot.com/'; // เปลี่ยนเป็นลิงก์ไลน์ของคุณ
         });
       }
     });
